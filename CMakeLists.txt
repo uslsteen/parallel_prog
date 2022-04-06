@@ -3,7 +3,7 @@ project(parallel_prog)
 
 find_package(MPI REQUIRED)
 
-set(DIRS hello)
+set(DIRS sum)
 
 set(PROBLEMS)
 
@@ -14,5 +14,5 @@ endforeach()
 foreach(PROBLEM IN LISTS PROBLEMS)
   target_include_directories(${PROBLEM} PRIVATE SYSTEM ${MPI_INCLUDE_PATH})
   target_link_libraries(${PROBLEM} PRIVATE ${MPI_C_LIBRARIES})
-  target_compile_options(${PROBLEM} PRIVATE -Wall -Wextra -Wpedantic)
+  target_compile_options(${PROBLEM} PRIVATE -Wall -Wextra)
 endforeach()
