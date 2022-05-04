@@ -35,8 +35,8 @@ double sum_recv(uint32_t commsize) {
     return res_sum;
 }
 
-void usage() {    
-    printf("USAGE: mpirun -np <nproc> ./sum <num>\n");
+void usage(char* exec_path) {    
+    printf("USAGE: mpirun -np <nproc> %s <num>\n", exec_path);
 }
 
 int main(int argc, char** argv) {
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
             sum_send(num, rank, commsize - 1);
     }
     else
-        usage();
+        usage(argv[0]);
 
     MPI_Finalize();
 }
