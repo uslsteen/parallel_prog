@@ -3,7 +3,7 @@ project(parallel_prog)
 
 find_package(MPI REQUIRED)
 
-set(DIRS sum)
+set(DIRS exp)
 
 set(PROBLEMS)
 
