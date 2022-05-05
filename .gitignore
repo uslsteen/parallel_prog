@@ -54,3 +54,7 @@ dkms.conf
 
 # Build directory
 build/
+
+# Text files
+*.out
+*.txt
