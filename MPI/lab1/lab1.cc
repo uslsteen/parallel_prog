@@ -118,10 +118,11 @@ std::vector<double> do_last_part(std::vector<std::vector<double>>& data, int32_t
 }
 
 void do_linear(std::vector<std::vector<double>>& data) {
+    double start = MPI_Wtime();
     std::vector<double> result{};
     
     for (uint32_t t = 1; t < t_steps; ++t) {
-        for (uint32_t x = 1; x < x_steps - 1; ++x)
+        for (uint32_t x = 1; x < x_steps; ++x)
             data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
     }
 
@@ -129,7 +130,10 @@ void do_linear(std::vector<std::vector<double>>& data) {
         for (int32_t x = 0; x < x_steps; ++x)
             result.push_back(data[t][x]);
 
+    double end = MPI_Wtime();
     dump(result, std::string{"data_linear.out"});
+
+    std::cout << (end - start) << " " << 1 << std::endl;
 }
 
 std::vector<std::vector<double>> init() {
