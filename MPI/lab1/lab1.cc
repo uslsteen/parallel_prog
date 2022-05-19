@@ -62,12 +62,21 @@ int main(int argc, char** argv) {
 
 void do_parallel(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
 
+    double start = MPI_Wtime();
+    MPI_Barrier(MPI_COMM_WORLD);
+
     do_main_job(data, rank, commsize);
     std::vector<double> result = do_last_part(data, rank, commsize);
     result.resize(x_steps * t_steps);
 
-    if (rank == 0)
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    auto end = MPI_Wtime();
+
+    if (rank == 0) {
+        std::cout << end - start << " " << commsize << std::endl;
         dump(result, std::string{"data_parallel.out"});
+    }
 }
 
 void do_main_job(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
@@ -75,8 +84,8 @@ void do_main_job(std::vector<std::vector<double>>& data, int32_t rank, int32_t c
         for (int32_t x = 1; x < x_steps; ++x) {
             if (t != 0) {
                 int src = rank ? rank - 1 : commsize - 1;
-                MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);               
-                data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
+                MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);    
             }
             int dest = (t + 1) % commsize;
             MPI_Send(&(data[t][x]), 1, MPI_DOUBLE, dest, x, MPI_COMM_WORLD);
@@ -112,7 +121,7 @@ void do_linear(std::vector<std::vector<double>>& data) {
     std::vector<double> result{};
     
     for (uint32_t t = 1; t < t_steps; ++t) {
-        for (uint32_t x = 1; x < x_steps; ++x)
+        for (uint32_t x = 1; x < x_steps - 1; ++x)
             data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
     }
 
