@@ -72,12 +72,11 @@ void do_parallel(std::vector<std::vector<double>>& data, int32_t rank, int32_t c
 
 void do_main_job(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
     for (int32_t t = rank; t < t_steps; t += commsize) {
-        for (int32_t x = 0; x < x_steps - 1; ++x) {
+        for (int32_t x = 1; x < x_steps; ++x) {
             if (t != 0) {
                 int src = rank ? rank - 1 : commsize - 1;
-                MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                
-                data[t][x + 1] =  data[t][x] - (tau / h) * (data[t][x] - data[t-1][x]) + tau * f(x * h, t * tau);    
+                MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);               
+                data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
             }
             int dest = (t + 1) % commsize;
             MPI_Send(&(data[t][x]), 1, MPI_DOUBLE, dest, x, MPI_COMM_WORLD);
@@ -113,8 +112,8 @@ void do_linear(std::vector<std::vector<double>>& data) {
     std::vector<double> result{};
     
     for (uint32_t t = 1; t < t_steps; ++t) {
-        for (uint32_t x = 0; x < x_steps - 1; ++x)
-            data[t][x + 1] =  data[t][x] - (tau / h) * (data[t][x] - data[t-1][x]) + tau * f(x * h, t * tau);
+        for (uint32_t x = 1; x < x_steps; ++x)
+            data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
     }
 
     for (int32_t t = 0; t < t_steps; ++t)
