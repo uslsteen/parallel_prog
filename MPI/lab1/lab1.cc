@@ -8,7 +8,6 @@
 #include <mpich/mpi.h>
 
 
-
 const double PI = std::atan(1) * 4;
 constexpr double T = 1,
                  X = 1;
@@ -25,6 +24,9 @@ constexpr uint32_t x_steps = static_cast<uint32_t>(X / h),
 inline double f(double x, double t) {
     return x + t;
 }
+
+inline double phi(double x) { return std::cos(PI * x); };
+inline double psi(double t) { return std::exp(-t); };
 
 std::ostream& operator <<(std::ostream &os, const std::vector<int>& vec) {
      for (auto && it : vec)
@@ -85,6 +87,7 @@ void do_main_job(std::vector<std::vector<double>>& data, int32_t rank, int32_t c
             if (t != 0) {
                 int src = rank ? rank - 1 : commsize - 1;
                 MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
                 data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);    
             }
             int dest = (t + 1) % commsize;
@@ -113,7 +116,6 @@ std::vector<double> do_last_part(std::vector<std::vector<double>>& data, int32_t
         else
             break;
     }
-
     return result;
 }
 
@@ -121,10 +123,9 @@ void do_linear(std::vector<std::vector<double>>& data) {
     double start = MPI_Wtime();
     std::vector<double> result{};
     
-    for (uint32_t t = 1; t < t_steps; ++t) {
+    for (uint32_t t = 0; t < t_steps - 1; ++t)
         for (uint32_t x = 1; x < x_steps; ++x)
-            data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);
-    }
+            data[t + 1][x] =  data[t][x] - (tau / h) * (data[t][x] - data[t][x - 1]) + tau * f(x * h, t * tau);
 
     for (int32_t t = 0; t < t_steps; ++t)
         for (int32_t x = 0; x < x_steps; ++x)
@@ -140,15 +141,14 @@ std::vector<std::vector<double>> init() {
     std::vector<std::vector<double>> data{};
     data.resize(t_steps);
 
-    auto phi = [](double x) { return std::cos(PI * x); };
-    auto psi = [](double t) { return std::exp(-t); };
+    for (auto&& data_it : data)
+        data_it.resize(x_steps);
+    
+    for (int32_t x = 0; x < x_steps; ++x)
+        data[0][x] = phi(x * h);
 
-    std::for_each (data.begin() , data.end() , [](std::vector<double>& x) {x.resize (x_steps); });
-    std::for_each (data.begin() + 1 , data.end() , 
-                   [i = 1 , &psi] (std::vector<double>& t) mutable { t[0] = psi (tau * i++); });
-
-    std::generate (data[0].begin(), data[0].end(), 
-                   [i = 0 , &phi] () mutable { return phi (h * i++); });
+    for (int32_t t = 0; t < t_steps; ++t)
+        data[t][0] = psi(t * tau);
 
     return data;
 }
