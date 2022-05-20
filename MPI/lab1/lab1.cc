@@ -13,8 +13,8 @@ constexpr double T = 1,
                  X = 1;
 
 //! NOTE: step along the x and t axes
-constexpr double h = 1e-2,
-                 tau = 1e-2;
+constexpr double h = 5e-3,
+                 tau = 5e-3;
 
 //! NOTE: num of steps
 //! NOTE: check correctness of rounding
@@ -64,16 +64,18 @@ int main(int argc, char** argv) {
 
 void do_parallel(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
 
+    std::vector<double> result{};
+    result.resize(x_steps * t_steps);
+
     double start = MPI_Wtime();
     MPI_Barrier(MPI_COMM_WORLD);
 
     do_main_job(data, rank, commsize);
-    std::vector<double> result = do_last_part(data, rank, commsize);
-    result.resize(x_steps * t_steps);
-
-    
     MPI_Barrier(MPI_COMM_WORLD);
     auto end = MPI_Wtime();
+
+    result = do_last_part(data, rank, commsize);
+    // result.resize(x_steps * t_steps);
 
     if (rank == 0) {
         std::cout << end - start << " " << commsize << std::endl;
@@ -82,41 +84,48 @@ void do_parallel(std::vector<std::vector<double>>& data, int32_t rank, int32_t c
 }
 
 void do_main_job(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
-    for (int32_t t = rank; t < t_steps; t += commsize) {
-        for (int32_t x = 1; x < x_steps; ++x) {
-            if (t != 0) {
-                int src = rank ? rank - 1 : commsize - 1;
-                MPI_Recv(&(data[t - 1][x]), 1, MPI_DOUBLE, src, x, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                data[t][x] =  data[t-1][x] - (tau / h) * (data[t-1][x] - data[t-1][x - 1]) + tau * f(x * h, (t - 1) * tau);    
-            }
-            int dest = (t + 1) % commsize;
-            MPI_Send(&(data[t][x]), 1, MPI_DOUBLE, dest, x, MPI_COMM_WORLD);
-        }
-    }
-}
-
-std::vector<double> do_last_part(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
-    std::vector<double> result{};
-    int32_t res_t_steps = t_steps + commsize - t_steps % commsize;
+    double cur_job = x_steps / commsize,
+           part_job = x_steps % commsize;
     
-    if (rank == 0) 
-        result.resize(x_steps * res_t_steps);
+    for (int32_t t = 0; t < t_steps - 1; ++t) {
 
-    std::vector<double> zeros(x_steps, 0);
+        if (rank != commsize - 1) {
+			for (int32_t x = rank * cur_job + 1; x < (rank + 1) * cur_job + 1; x++) {
+					data[t + 1][x] = (f(t * tau, x * h) + 0.5 * tau / (h * h) * \
+						(data[t][x + 1] - 2 * data[t][x] + data[t][x - 1]) + (data[t][x + 1] - data[t][x - 1])/ (2 * h)) * \
+							tau + data[t][x];
+			}
 
-    for (int32_t t = rank; t < res_t_steps; t += commsize) {
-        if (commsize > 1) {
-            auto *src_buf = t < t_steps ? data[t].data() : zeros.data();
-            MPI_Gather(src_buf, x_steps, MPI_DOUBLE,
-                       result.data() + t * x_steps, x_steps, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+			data[t + 1][(rank + 1) * cur_job] = (f(t * tau, (x_steps - 1) * h) - (data[t][x_steps - 1] - data[t][x_steps - 2]) / h) * tau + data[t][x_steps - 1];
+			
+            if (rank != commsize - 2)
+				MPI_Send(&data[t + 1][(rank + 1) * cur_job], 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+		
+			MPI_Recv(&data[t + 1][(rank + 1) * cur_job], 1, MPI_DOUBLE, rank + 1, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+			if (rank != 0) {
+				MPI_Recv(&data[t + 1][rank * cur_job], 1, MPI_DOUBLE, rank - 1, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Send(&data[t + 1][rank * cur_job + 1], 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+			}
+			
+            MPI_Send(&data[t + 1][rank * cur_job + 1], cur_job, MPI_DOUBLE, commsize - 1, 0, MPI_COMM_WORLD);
+		}
+        else if (rank == commsize - 1) {
+            for (int32_t x = rank * cur_job + 1; x < x_steps - 1; x++) {
+                    data[t + 1][x] = (f(t * tau, x * h) + 0.5 * tau / (h * h) * (data[t][x + 1] - 2 * data[t][x] + data[t][x - 1]) +
+                                                                                (data[t][x + 1] - data[t][x - 1])/ (2 * h)) * tau + data[t][x];
+            }
+
+            if (commsize != 1)
+                MPI_Send(&data[t + 1][rank * cur_job + 1], 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+                
+            data[t + 1][x_steps - 1] = (f(t * tau, (x_steps - 1) * h) - (data[t][x_steps - 1] - data[t][x_steps - 2]) / h) * tau + data[t][x_steps - 1];
+
+            for (int32_t i = 0; i < commsize - 1; i++)
+                MPI_Recv(&data[t + 1][i * cur_job + 1], cur_job, MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
-        else if (t < t_steps)
-            std::copy(data[t].begin(), data[T].end(), result.begin() + t * x_steps);
-        else
-            break;
     }
-    return result;
 }
 
 void do_linear(std::vector<std::vector<double>>& data) {
@@ -161,4 +170,27 @@ void dump(std::vector<double>& data, std::string&& out_f) {
         out << data_it << std::endl;
 
     out.close();
+}
+
+std::vector<double> do_last_part(std::vector<std::vector<double>>& data, int32_t rank, int32_t commsize) {
+    std::vector<double> result{};
+    int32_t res_t_steps = t_steps + commsize - t_steps % commsize;
+    
+    if (rank == 0) 
+        result.resize(x_steps * res_t_steps);
+
+    std::vector<double> zeros(x_steps, 0);
+
+    for (int32_t t = rank; t < res_t_steps; ++t) {
+        if (commsize > 1) {
+            auto *src_buf = t < t_steps ? data[t].data() : zeros.data();
+            MPI_Gather(src_buf, x_steps, MPI_DOUBLE,
+                       result.data() + t * x_steps, x_steps, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+        else if (t < t_steps)
+            std::copy(data[t].begin(), data[T].end(), result.begin() + t * x_steps);
+        else
+            break;
+    }
+    return result;
 }
