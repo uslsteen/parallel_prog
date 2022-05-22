@@ -140,6 +140,7 @@ void do_linear(std::vector<std::vector<double>>& data) {
         for (int32_t x = 0; x < x_steps; ++x)
             result.push_back(data[t][x]);
 
+
     double end = MPI_Wtime();
     dump(result, std::string{"data_linear.out"});
 
@@ -181,7 +182,7 @@ std::vector<double> do_last_part(std::vector<std::vector<double>>& data, int32_t
 
     std::vector<double> zeros(x_steps, 0);
 
-    for (int32_t t = rank; t < res_t_steps; ++t) {
+    for (int32_t t = rank; t < res_t_steps; t += commsize) {
         if (commsize > 1) {
             auto *src_buf = t < t_steps ? data[t].data() : zeros.data();
             MPI_Gather(src_buf, x_steps, MPI_DOUBLE,
