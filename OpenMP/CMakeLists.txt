@@ -3,7 +3,7 @@ project(parallel_prog)
 
 find_package(OpenMP)
 
-set(DIRS int hello)
+set(DIRS int hello sum seq_access nested copyin)
 
 if(OpenMP_CXX_FOUND)
     foreach(TARGET ${DIRS})
