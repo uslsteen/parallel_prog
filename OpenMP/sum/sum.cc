@@ -1,9 +1,8 @@
 #include <iostream>
 #include <omp.h>
 
-
 inline void usage(char* exec_path) {    
-    std::cout << "USAGE:  ./sum" <<  exec_path << " <num>\n";
+    std::cout << "USAGE: " <<  exec_path << " <num>\n";
 }
 
 double calc_sum(int num, int thr_num, int thread_amount) {
