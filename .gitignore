@@ -54,6 +54,7 @@ dkms.conf
 
 # Build directory
 build/
+.vscode/
 
 # Text files
 *.out
