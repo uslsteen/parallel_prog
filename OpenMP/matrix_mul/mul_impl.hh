@@ -118,37 +118,3 @@ auto mul(const Matr_int &lhs, const Matr_int &rhs) {
 } // namespace mul_optimiz
 
 #endif //! MUL_IMPL
-
-
-/*
-auto mul_n_transpose(const Matr_int &lhs, const Matr_int &rhs) {
-  Matr_int rhs_t{rhs.transposition()};
-  //
-  Matr_int res{lhs.nrows(), rhs.nclmns()};
-
-  std::size_t res_c = res.nclmns(), res_r = res.nrows(),
-              com_sz = lhs.nclmns(), unroll_size = com_sz - com_sz % 16;
-
-  for (std::size_t i = 0; i < res_r; ++i)
-    for (std::size_t j = 0; j < res_c; ++j) {
-      //
-      auto lptr = lhs[i];
-      auto rptr = rhs_t[j];
-      std::size_t k = 0;
-      for (; k < unroll_size; k += 16)
-        res[i][j] += lptr[k] * rptr[k] + lptr[k + 1] * rptr[k + 1] +
-                     lptr[k + 2] * rptr[k + 2] + lptr[k + 3] * rptr[k + 3] +
-                     lptr[k + 4] * rptr[k + 4] + lptr[k + 5] * rptr[k + 5] +
-                     lptr[k + 6] * rptr[k + 6] + lptr[k + 7] * rptr[k + 7] +
-                     lptr[k + 8] * rptr[k + 8] + lptr[k + 9] * rptr[k + 9] +
-                     lptr[k + 10] * rptr[k + 10] + lptr[k + 11] * rptr[k + 11] +
-                     lptr[k + 12] * rptr[k + 12] + lptr[k + 13] * rptr[k + 13] +
-                     lptr[k + 14] * rptr[k + 14] + lptr[k + 15] * rptr[k + 15];
-
-      for (; k < com_sz; ++k)
-        res[i][j] += lptr[k] * rptr[k];
-    }
-
-  return res;
-}
-*/
