@@ -223,9 +223,6 @@ public:
   }
 
   Matrix<Data> &operator*=(const Matrix<Data> &mtr) {
-    std::cout << clmns << std::endl;
-    std::cout << mtr.rows << std::endl;
-
     assert(clmns == mtr.rows);
 
     Matrix tmp_mtr{rows, mtr.clmns, 0};

@@ -5,7 +5,7 @@ project(matrix_mul)
 #
 find_package(OpenMP)
 
-set(CMAKE_CXX_FLAGS "-mavx2 -mbmi2 -mpopcnt -mfma -mcx16 -mtune=znver1")
+set(CMAKE_CXX_FLAGS "-mavx2 -mbmi2 -mpopcnt -mfma -mcx16 -mtune=znver1 -O0")
 
 set(WARN_OPTIONS 
   -Wall -Wextra -Wunused -Wpedantic 

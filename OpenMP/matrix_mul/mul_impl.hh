@@ -11,13 +11,112 @@ namespace mul_optimiz {
 using type = int;
 using Matr_int = Linear_space::Matrix<type>;
 
+auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
+  auto lhs_rows = lhs.nrows(), rhs_cols = rhs.nclmns(), rhs_rows = rhs.nrows();
+  Matr_int res{lhs_rows, rhs_cols};
+
+  int *proxy_row = new int[lhs_rows];
+  int *proxy_col = new int[rhs_rows];
+
+  std::size_t d = (lhs_rows) / 2;
+
+  auto start = omp_get_wtime();
+
+  for (std::size_t row = 0; row < lhs_rows; ++row) {
+    proxy_row[row] = lhs[row][0] * lhs[row][1];
+    for (std::size_t col = 1; col < d; ++col)
+      proxy_row[row] += lhs[row][2 * col] * lhs[row][2 * col + 1];
+  }
+
+  for (std::size_t col = 0; col < rhs_cols; ++col) {
+    proxy_col[col] = rhs[0][col] * rhs[1][col];
+    for (std::size_t row = 1; row < d; ++row)
+      proxy_col[col] += rhs[2 * row][col] * rhs[2 * row + 1][col];
+  }
+
+  for (std::size_t row = 0; row < lhs_rows; ++row) {
+    for (std::size_t col = 0; col < rhs_cols; ++col) {
+      res[row][col] = -proxy_row[row] - proxy_col[col];
+
+      for (std::size_t k = 0; k < d; ++k) {
+        res[row][col] += (lhs[row][2 * k] + rhs[2 * k + 1][col]) *
+                         (lhs[row][2 * k + 1] + rhs[2 * k][col]);
+      }
+    }
+  }
+  auto end = omp_get_wtime();
+  std::cout << "Vinograd linear time : " << end - start << std::endl;
+
+  if (2 * d != lhs_rows) {
+    for (std::size_t row = 0; row < lhs_rows; ++row) {
+      for (std::size_t col = 0; col < rhs_cols; ++col)
+        res[row][col] += lhs[row][rhs_rows - 1] * rhs[lhs_rows - 1][col];
+    }
+  }
+
+  delete[] proxy_row;
+  delete[] proxy_col;
+  //
+  return res;
+}
+
 /**
  * @brief
  *
  */
 namespace openmp_impl {
 
-auto mul(const Matr_int &lhs, const Matr_int &rhs, bool is_simd = false) {
+auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
+  auto lhs_rows = lhs.nrows(), rhs_cols = rhs.nclmns(), rhs_rows = rhs.nrows();
+  std::size_t row = 0, col = 1;
+  Matr_int res{lhs_rows, rhs_cols};
+
+  int *proxy_row = new int[lhs_rows];
+  int *proxy_col = new int[rhs_rows];
+
+  std::size_t d = (lhs_rows) / 2;
+
+  #pragma omp parallel for private(row, col) shared(lhs, rhs, proxy_row)
+  for (row = 0; row < lhs_rows; row++) {
+    proxy_row[row] = lhs[row][0] * lhs[row][1];
+    for (col = 1; col < d; col++)
+      proxy_row[row] += lhs[row][2 * col] * lhs[row][2 * col + 1];
+  }
+
+  #pragma omp parallel for private(row, col) shared(lhs, rhs, proxy_col)
+  for (col = 0; col < rhs_rows; col++) {
+    proxy_col[col] = rhs[0][col] * rhs[1][col];
+    for (row = 1; row < d; row++)
+      proxy_col[col] += rhs[2 * row][col] * rhs[2 * row + 1][col];
+  }
+
+  #pragma omp parallel for private(row, col) shared(lhs, rhs, proxy_row, proxy_col, res)
+  for (row = 0; row < lhs_rows; row++) {
+    for (col = 0; col < rhs_cols; col++) {
+      res[row][col] = -proxy_row[row] - proxy_col[col];
+
+      for (std::size_t k = 0; k < d; k++) {
+        res[row][col] += (lhs[row][2 * k] + rhs[2 * k + 1][col]) *
+                         (lhs[row][2 * k + 1] + rhs[2 * k][col]);
+      }
+    }
+  }
+
+  if (2 * d != lhs_rows) {
+  #pragma omp parallel for private(row, col) shared(lhs, rhs, res)
+    for (row = 0; row < lhs_rows; row++) {
+      for (col = 0; col < rhs_cols; col++)
+        res[row][col] += lhs[row][rhs_rows - 1] * rhs[lhs_rows - 1][col];
+    }
+  }
+  //
+  delete[] proxy_row;
+  delete[] proxy_col;
+  //
+  return res;
+}
+
+auto naive_mul(const Matr_int &lhs, const Matr_int &rhs, bool is_simd = false) {
   auto lhs_rows = lhs.nrows(), rhs_cols = rhs.nclmns(), rhs_rows = rhs.nrows();
 
   size_t i = 0, j = 0, k = 0;
