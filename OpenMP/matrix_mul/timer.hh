@@ -17,7 +17,7 @@ public:
   void reset_time() { beg = clock_t::now(); }
 
   double elapsed() const {
-    return std::chrono::duration_cast<microseconds>(clock_t::now() - beg)
+    return std::chrono::duration_cast<std::chrono::seconds>(clock_t::now() - beg)
         .count();
   }
 };

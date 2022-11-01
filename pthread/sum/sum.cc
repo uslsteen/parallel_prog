@@ -3,6 +3,7 @@
 #include <memory>
 #include <pthread.h>
 #include <vector>
+#include <array>
 
 void *thr_calc(void *arg);
 

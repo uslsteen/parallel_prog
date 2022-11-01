@@ -5,8 +5,7 @@ find_package(MPI REQUIRED)
 
 set(PROBLEM lab1)
 
-add_executable(${PROBLEM} ${PROBLEM}.cc)
+add_executable(${PROBLEM}_MPI ${PROBLEM}.cc)
 
-target_include_directories(${PROBLEM} PRIVATE SYSTEM ${MPI_INCLUDE_PATH})
-target_link_libraries(${PROBLEM} PRIVATE ${MPI_C_LIBRARIES})
-target_compile_options(${PROBLEM} PRIVATE -Wall -Wextra)
+target_include_directories(${PROBLEM}_MPI SYSTEM PRIVATE ${MPI_CXX_INCLUDE_PATH} ${MPI_C_INCLUDE_PATH})
+target_link_libraries(${PROBLEM}_MPI PRIVATE ${MPI_CXX_LIBRARIES})

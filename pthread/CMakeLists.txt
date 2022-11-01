@@ -1,17 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
-project(parallel_prog)
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
+SUBDIRS(DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Threads REQUIRED)
 
-set(DIRS hello mutex sum)
-set(PROBLEMS)
+if(Threads_FOUND)
+    foreach(DIR ${DIRS})
+        add_subdirectory(${DIR})
+    endforeach() 
+endif()
 
-foreach(DIR ${DIRS})
-  add_subdirectory(${DIR})
-endforeach()
-
-foreach(PROBLEM IN LISTS PROBLEMS)
-  target_link_libraries(${PROBLEM} PRIVATE Threads::Threads)
-  target_compile_options(${PROBLEM} PRIVATE -Wall -Wextra)
-endforeach()
+list(APPEND TARGETS ${NEW_TAR})
+set(TARGETS ${TARGETS} PARENT_SCOPE)

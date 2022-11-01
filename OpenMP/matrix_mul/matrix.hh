@@ -227,11 +227,9 @@ public:
 
     Matrix tmp_mtr{rows, mtr.clmns, 0};
 
-    for (uint i = 0; i < rows; ++i)
-
-      for (uint j = 0; j < mtr.clmns; ++j)
-
-        for (uint k = 0; k < mtr.rows; ++k)
+    for (std::size_t i = 0; i < rows; ++i)
+      for (std::size_t j = 0; j < mtr.clmns; ++j)
+        for (std::size_t k = 0; k < mtr.rows; ++k)
           tmp_mtr[i][j] += matrix[i][k] * mtr.matrix[k][j];
 
     *this = tmp_mtr;

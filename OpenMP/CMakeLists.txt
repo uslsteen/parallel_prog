@@ -1,14 +1,12 @@
-cmake_minimum_required(VERSION 3.16)
-project(parallel_prog)
-
-find_package(OpenMP)
-
-set(DIRS int hello sum seq_access nested copyin)
+find_package(OpenMP REQUIRED)
+##
+SUBDIRS(DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(OpenMP_CXX_FOUND)
-    foreach(TARGET ${DIRS})
-        add_executable(${TARGET} ${TARGET}/${TARGET}.cc)
-        target_compile_options(${TARGET} INTERFACE "-Wall -Wextra")
-        target_link_libraries(${TARGET} PUBLIC OpenMP::OpenMP_CXX)
-    endforeach()
+    foreach(DIR ${DIRS})
+        add_subdirectory(${DIR})
+    endforeach() 
 endif()
+
+list(APPEND TARGETS ${NEW_TAR})
+set(TARGETS ${TARGETS} PARENT_SCOPE)

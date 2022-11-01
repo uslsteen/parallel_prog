@@ -3,7 +3,9 @@
 #include <cmath>
 #include <vector>
 
-#include <mpich/mpi.h>
+// #include <mpich/mpi.h>
+#include <mpi.h>
+
 
 const double START = 0;
 const double END = 2;

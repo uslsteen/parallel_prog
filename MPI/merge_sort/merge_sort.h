@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
 #include <mpi.h>
 
 void merge_sort(int* arr, int left, int right);

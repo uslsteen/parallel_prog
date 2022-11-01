@@ -18,7 +18,7 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
   int *proxy_row = new int[lhs_rows];
   int *proxy_col = new int[rhs_rows];
 
-  std::size_t d = (lhs_rows) / 2;
+  std::size_t d = lhs_rows / 2;
 
   auto start = omp_get_wtime();
 
@@ -37,7 +37,7 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
   for (std::size_t row = 0; row < lhs_rows; ++row) {
     for (std::size_t col = 0; col < rhs_cols; ++col) {
       res[row][col] = -proxy_row[row] - proxy_col[col];
-
+      //
       for (std::size_t k = 0; k < d; ++k) {
         res[row][col] += (lhs[row][2 * k] + rhs[2 * k + 1][col]) *
                          (lhs[row][2 * k + 1] + rhs[2 * k][col]);
@@ -45,7 +45,7 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
     }
   }
   auto end = omp_get_wtime();
-  std::cout << "Vinograd linear time : " << end - start << std::endl;
+  std::cout << "Vinograd linear time : " << (end - start) * 1000 << std::endl;
 
   if (2 * d != lhs_rows) {
     for (std::size_t row = 0; row < lhs_rows; ++row) {
@@ -75,6 +75,7 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
   int *proxy_col = new int[rhs_rows];
 
   std::size_t d = (lhs_rows) / 2;
+  auto start = omp_get_wtime();
 
   #pragma omp parallel for private(row, col) shared(lhs, rhs, proxy_row)
   for (row = 0; row < lhs_rows; row++) {
@@ -102,6 +103,7 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
     }
   }
 
+
   if (2 * d != lhs_rows) {
   #pragma omp parallel for private(row, col) shared(lhs, rhs, res)
     for (row = 0; row < lhs_rows; row++) {
@@ -110,6 +112,8 @@ auto vinograd_mul(const Matr_int &lhs, const Matr_int &rhs) {
     }
   }
   //
+  auto end = omp_get_wtime();
+  std::cout << "Vinograd parallel time : " << (end - start) * 1000 << std::endl;
   delete[] proxy_row;
   delete[] proxy_col;
   //

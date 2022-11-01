@@ -1,18 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
-project(parallel_prog)
-
 find_package(MPI REQUIRED)
+SUBDIRS(DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(DIRS exp)
+if(MPI_CXX_FOUND)
+    foreach(DIR ${DIRS})
+        add_subdirectory(${DIR})
+    endforeach() 
+endif()
 
-set(PROBLEMS)
-
-foreach(DIR ${DIRS})
-  add_subdirectory(${DIR})
-endforeach()
-
-foreach(PROBLEM IN LISTS PROBLEMS)
-  target_include_directories(${PROBLEM} PRIVATE SYSTEM ${MPI_INCLUDE_PATH})
-  target_link_libraries(${PROBLEM} PRIVATE ${MPI_C_LIBRARIES})
-  target_compile_options(${PROBLEM} PRIVATE -Wall -Wextra)
-endforeach()
+list(APPEND TARGETS ${NEW_TAR})
+set(TARGETS ${TARGETS} PARENT_SCOPE)

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 void sum_send(int32_t num, int32_t cur_rank, int32_t commsize) {
     

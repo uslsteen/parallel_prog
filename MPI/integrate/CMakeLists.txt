@@ -1,0 +1,9 @@
+set(PROBLEM integrate)
+  
+list(APPEND PROBLEMS ${PROBLEM})
+set(PROBLEMS ${PROBLEM} PARENT_SCOPE)
+
+add_executable(${PROBLEM}_MPI ${PROBLEM}.cc)
+
+target_include_directories(${PROBLEM}_MPI SYSTEM PRIVATE ${MPI_CXX_INCLUDE_PATH} ${MPI_C_INCLUDE_PATH})
+target_link_libraries(${PROBLEM}_MPI PRIVATE ${MPI_CXX_LIBRARIES})

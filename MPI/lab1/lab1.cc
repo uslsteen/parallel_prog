@@ -5,8 +5,7 @@
 #include <fstream>
 #include <cmath>
 
-#include <mpich/mpi.h>
-
+#include <mpi.h>
 
 const double PI = std::atan(1) * 4;
 constexpr double T = 1,
