@@ -1,0 +1,15 @@
+Naive FFTtime : 2855 microsecs
+Passed
+
+Cooley-Tukey FFTtime : 178 microsecs
+Passed
+
+Parallel Cooley-Tukey FFTtime : 190 microsecs
+Passed
+
+Optimized Cooley-Tukey FFTtime : 34 microsecs
+Passed
+
+Optimized parallel Cooley-Tukey FFTtime : 33 microsecs
+Passed
+
