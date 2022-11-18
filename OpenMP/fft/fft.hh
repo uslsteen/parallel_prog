@@ -170,9 +170,9 @@ compl_vec ct_par_FFT(const compl_vec &data) {
 #pragma omp single nowait
     {
 #pragma omp task
-      res_even = ct_par_FFT(even);
+      res_even = ct_FFT(even);
 #pragma omp task
-      res_odd = ct_par_FFT(odd);
+      res_odd = ct_FFT(odd);
     }
   }
   compl_vec result(N);

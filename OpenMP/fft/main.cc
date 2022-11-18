@@ -23,6 +23,7 @@ void test(fft::compl_vec &x, fft::compl_vec &ref, std::pair<fft::func, std::stri
 }
 
 int main() {
+  omp_set_num_threads(8);
   fft::compl_vec x{}, ref{};
   input_data(x);
   input_data(ref);
