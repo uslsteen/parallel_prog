@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(parallel_prog)
 #
 set(CMAKE_VERBOSE_MAKEFILE)
-set(DIRS OpenMP MPI pthread)
+set(DIRS OpenMP MPI pthread OpenCL)
 #
 include(cmake/subdirs.cmake)
 
