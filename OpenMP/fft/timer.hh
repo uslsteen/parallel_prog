@@ -4,7 +4,8 @@
 #include <chrono>
 
 namespace timer {
-using std::chrono::microseconds;
+
+using microsecs = std::chrono::microseconds;
 
 class Timer final {
   using clock_t = std::chrono::high_resolution_clock;

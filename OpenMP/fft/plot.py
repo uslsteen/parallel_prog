@@ -4,7 +4,7 @@ import pandas as pd
 
 fig_size = [18, 10]
 
-data = pd.read_csv('data_also.csv')
+data = pd.read_csv('data.csv')
 sizes = data["Size"] 
 names = list()
 

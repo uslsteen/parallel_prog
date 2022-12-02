@@ -231,7 +231,7 @@ compl_vec ct_opt_par_FFT(const compl_vec &data) {
  * 
  */
 std::vector<std::pair<func, std::string>> funcs{
-    std::make_pair(naive_FFT, "Naive FFT"),
+    //std::make_pair(naive_FFT, "Naive FFT"),
     std::make_pair(ct_FFT, "Cooley-Tukey FFT"),
     std::make_pair(ct_par_FFT, "Parallel Cooley-Tukey FFT"),
     std::make_pair(ct_opt_FFT, "Optimized Cooley-Tukey FFT"),
